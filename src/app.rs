@@ -1,40 +1,59 @@
-use crate::task::Task;
+use crate::task::List;
 use crossterm::{
-    terminal::{enable_raw_mode, disable_raw_mode},
+    cursor::{self, RestorePosition, SavePosition},
     event::{read, Event, KeyCode},
-    cursor::{RestorePosition, SavePosition},
-    execute, ExecutableCommand, Result,
+    execute,
+    style::Print,
+    terminal::{disable_raw_mode, enable_raw_mode},
+    ExecutableCommand, Result,
 };
 use std::io::{stdout, Write};
 
 pub struct App {
-    tasks: Vec<Task>,
+    lists: Vec<List>,
 }
 
 impl App {
-    pub fn new(tasks: Vec<Task>) -> Self {
-        Self { tasks }
+    pub fn new(lists: Vec<List>) -> Self {
+        Self { lists }
     }
 
     pub fn run(&mut self) -> Result<()> {
         // Saving the start position of the app
-        execute!(stdout(), SavePosition)?;
+        execute!(stdout(), SavePosition, cursor::SetCursorStyle::SteadyUnderScore)?;
         enable_raw_mode()?;
         loop {
-            self.draw();
+            execute!(stdout(), RestorePosition)?;
+            self.draw()?;
 
             if let Event::Key(key) = read()? {
                 match key.code {
                     KeyCode::Char('q') => break,
-                    _ => ()
+                    _ => (),
                 }
             }
         }
-        execute!(stdout(), RestorePosition)?;
         disable_raw_mode()?;
+        execute!(stdout(), cursor::SetCursorStyle::DefaultUserShape)?;
 
         Ok(())
     }
 
-    fn draw(&self) {}
+    fn draw(&self) -> Result<()> {
+        fn println<T: ToString>(text: T) -> Result<()> {
+            let mut text = text.to_string();
+            text.push_str("\n\r");
+            execute!(stdout(), Print(text))?;
+            Ok(())
+        }
+
+        if let Some(list) = self.lists.iter().next() { // At the moment only prints the first list
+            println(list.name())?;
+            for task in list.tasks_iter() {
+                println(task.to_string())?;
+            }
+        }
+
+        Ok(())
+    }
 }

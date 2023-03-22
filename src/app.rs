@@ -1,13 +1,14 @@
 use crate::task::List;
+use colored::Colorize;
 use crossterm::{
     cursor::{self, RestorePosition, SavePosition},
     event::{read, Event, KeyCode},
     execute,
     style::Print,
     terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType},
-    ExecutableCommand, Result,
+    Result,
 };
-use std::io::{stdout, Write};
+use std::io::stdout;
 
 pub struct App {
     lists: Vec<List>,
@@ -70,14 +71,13 @@ impl App {
 
     fn draw(&self, list: &List) -> Result<()> {
         fn println<T: ToString>(text: T) -> Result<()> {
-            let mut text = text.to_string();
-            text.push_str("\n\r");
+            let text = format!("{}\n\r", text.to_string());
             execute!(stdout(), Print(text))?;
             Ok(())
         }
 
         // At the moment only prints the first list
-        println(list.name())?;
+        println(list.name().bold())?;
         for task in list.tasks_iter() {
             println(task.to_string())?;
         }

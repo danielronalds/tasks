@@ -1,3 +1,5 @@
+use colored::Colorize;
+
 pub struct List {
     tasks: Vec<Task>,
     name: String,
@@ -62,9 +64,9 @@ impl ToString for Task {
     fn to_string(&self) -> String {
         let mut string = String::new();
 
-        string.push_str(match self.completed {
-            true => "[x] ",
-            false => "[ ] ",
+        string.push_str(&match self.completed {
+            true => format!("{}", format!("[{}] ", "✔".bright_green()).bold()),
+            false => format!("{}", "[ ] ".bold()),
         });
 
         string.push_str(&self.description);

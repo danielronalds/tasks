@@ -20,6 +20,18 @@ impl List {
         self.tasks.iter()
     }
 
+    pub fn toggle_task(&mut self, index: usize) {
+        if index >= self.length() {
+            return;
+        }
+
+        self.tasks[index].toggle_status();
+    }
+
+    pub fn length(&self) -> usize {
+        self.tasks.len()
+    }
+
     pub fn add_task<T: ToString>(&mut self, description: T) {
         self.tasks.push(Task::new(description));
     }

@@ -12,11 +12,17 @@ use std::io::stdout;
 
 pub struct App {
     lists: Vec<List>,
+    current_list_index: usize,
+    current_task_index: usize,
 }
 
 impl App {
     pub fn new(lists: Vec<List>) -> Self {
-        Self { lists }
+        Self {
+            lists,
+            current_list_index: 0,
+            current_task_index: 0,
+        }
     }
 
     pub fn run(&mut self) -> Result<()> {
@@ -28,21 +34,17 @@ impl App {
         )?;
         enable_raw_mode()?;
 
-        let mut current_task_index: usize = 0;
-
-        let mut current_list_index: usize = 0;
-
         loop {
             execute!(stdout(), RestorePosition, Clear(ClearType::FromCursorDown))?;
-            self.draw(&self.lists[current_list_index])?;
+            self.draw(&self.lists[self.current_list_index])?;
             execute!(
                 stdout(),
                 RestorePosition,
-                cursor::MoveDown((current_task_index + 1) as u16),
+                cursor::MoveDown((self.current_task_index + 1) as u16),
                 cursor::MoveRight(1)
             )?;
 
-            if self.lists[current_list_index].length() == 0 {
+            if self.lists[self.current_list_index].length() == 0 {
                 execute!(stdout(), cursor::Hide)?;
             } else {
                 execute!(stdout(), cursor::Show)?;
@@ -51,98 +53,16 @@ impl App {
             if let Event::Key(key) = read()? {
                 match key.code {
                     KeyCode::Char('q') => break,
-                    KeyCode::Char('j') => {
-                        if current_task_index + 1 < self.lists[current_list_index].length() {
-                            current_task_index += 1;
-                        }
-                    }
-                    KeyCode::Char('k') => {
-                        current_task_index = current_task_index.saturating_sub(1);
-                    }
-                    KeyCode::Char('l') => {
-                        if current_list_index + 1 < self.lists.len() {
-                            current_list_index += 1;
-                            current_task_index = 0;
-                        }
-                    }
-                    KeyCode::Char('h') => {
-                        current_list_index = current_list_index.saturating_sub(1);
-                        if current_task_index >= self.lists[current_list_index].length() {
-                            current_task_index = 0;
-                        }
-                    }
-                    KeyCode::Char('D') => {
-                        if self.lists.len() > 1 {
-                            self.lists.remove(current_list_index);
-                            current_list_index = current_list_index.saturating_sub(1);
-                        }
-                    }
-                    KeyCode::Char('d') => {
-                        self.lists[current_list_index].delete_task(current_task_index);
-                        current_task_index = current_task_index.saturating_sub(1);
-                    }
-                    KeyCode::Char('N') => {
-                        execute!(stdout(), RestorePosition, Clear(ClearType::FromCursorDown))?;
-
-                        let mut name = String::new();
-
-                        loop {
-                            execute!(
-                                stdout(),
-                                cursor::Show,
-                                Clear(ClearType::CurrentLine),
-                                Print(format!("\r{}", &name))
-                            )?;
-                            if let Event::Key(key) = read()? {
-                                match key.code {
-                                    KeyCode::Char(char) => name.push(char),
-                                    KeyCode::Backspace => {
-                                        name.pop();
-                                    }
-                                    KeyCode::Enter => break,
-                                    _ => (),
-                                }
-                            }
-                        }
-                        let list = List::new(name);
-                        self.lists.insert(current_list_index + 1, list);
-                        current_list_index += 1;
-                    }
-                    KeyCode::Char('n') => {
-                        execute!(
-                            stdout(),
-                            RestorePosition,
-                            cursor::MoveDown((self.lists[current_list_index].length() + 1) as u16),
-                        )?;
-
-                        let mut description = String::new();
-
-                        loop {
-                            execute!(
-                                stdout(),
-                                RestorePosition,
-                                cursor::MoveDown(
-                                    (self.lists[current_list_index].length() + 1) as u16
-                                ),
-                                Clear(ClearType::FromCursorDown),
-                                Print(format!("\r{} {}", "[ ]".bold(), &description))
-                            )?;
-                            if let Event::Key(key) = read()? {
-                                match key.code {
-                                    KeyCode::Char(char) => description.push(char),
-                                    KeyCode::Backspace => {
-                                        description.pop();
-                                    }
-                                    KeyCode::Enter => break,
-                                    _ => (),
-                                }
-                            }
-                        }
-
-                        self.lists[current_list_index].add_task(description);
-                    }
+                    KeyCode::Char('j') => self.move_to_next_task(),
+                    KeyCode::Char('k') => self.move_to_prev_task(),
+                    KeyCode::Char('l') => self.move_to_next_list(),
+                    KeyCode::Char('h') => self.move_to_prev_list(),
+                    KeyCode::Char('D') => self.delete_current_list(),
+                    KeyCode::Char('d') => self.delete_current_task(),
+                    KeyCode::Char('N') => self.create_new_list()?,
+                    KeyCode::Char('n') => self.create_new_task()?,
                     KeyCode::Char(' ') => {
-                        self.lists[current_list_index].toggle_task(current_task_index)
+                        self.lists[self.current_list_index].toggle_task(self.current_task_index)
                     }
                     _ => (),
                 }
@@ -173,5 +93,103 @@ impl App {
         }
 
         Ok(())
+    }
+
+    fn move_to_next_list(&mut self) {
+        if self.current_list_index + 1 < self.lists.len() {
+            self.current_list_index += 1;
+            self.current_task_index = 0;
+        }
+    }
+
+    fn move_to_prev_list(&mut self) {
+        self.current_list_index = self.current_list_index.saturating_sub(1);
+        if self.current_task_index >= self.lists[self.current_list_index].length() {
+            self.current_task_index = 0;
+        }
+    }
+
+    fn move_to_next_task(&mut self) {
+        if self.current_task_index + 1 < self.lists[self.current_list_index].length() {
+            self.current_task_index += 1;
+        }
+    }
+
+    fn move_to_prev_task(&mut self) {
+        self.current_task_index = self.current_task_index.saturating_sub(1);
+    }
+
+    fn create_new_list(&mut self) -> Result<()> {
+        execute!(stdout(), RestorePosition, Clear(ClearType::FromCursorDown))?;
+
+        let mut name = String::new();
+
+        loop {
+            execute!(
+                stdout(),
+                cursor::Show,
+                Clear(ClearType::CurrentLine),
+                Print(format!("\r{}", &name))
+            )?;
+            if let Event::Key(key) = read()? {
+                match key.code {
+                    KeyCode::Char(char) => name.push(char),
+                    KeyCode::Backspace => {
+                        name.pop();
+                    }
+                    KeyCode::Enter => break,
+                    _ => (),
+                }
+            }
+        }
+        let list = List::new(name);
+        self.lists.insert(self.current_list_index + 1, list);
+        self.current_list_index += 1;
+        Ok(())
+    }
+
+    fn delete_current_list(&mut self) {
+        if self.lists.len() > 1 {
+            self.lists.remove(self.current_list_index);
+            self.current_list_index = self.current_list_index.saturating_sub(1);
+        }
+    }
+
+    fn create_new_task(&mut self) -> Result<()> {
+        execute!(
+            stdout(),
+            RestorePosition,
+            cursor::MoveDown((self.lists[self.current_list_index].length() + 1) as u16),
+        )?;
+
+        let mut description = String::new();
+
+        loop {
+            execute!(
+                stdout(),
+                RestorePosition,
+                cursor::MoveDown((self.lists[self.current_list_index].length() + 1) as u16),
+                Clear(ClearType::FromCursorDown),
+                Print(format!("\r{} {}", "[ ]".bold(), &description))
+            )?;
+            if let Event::Key(key) = read()? {
+                match key.code {
+                    KeyCode::Char(char) => description.push(char),
+                    KeyCode::Backspace => {
+                        description.pop();
+                    }
+                    KeyCode::Enter => break,
+                    _ => (),
+                }
+            }
+        }
+
+        self.lists[self.current_list_index].add_task(description);
+        Ok(())
+    }
+
+    fn delete_current_task(&mut self) {
+        self.lists[self.current_list_index].delete_task(self.current_task_index);
+        self.current_task_index = self.current_task_index.saturating_sub(1);
     }
 }

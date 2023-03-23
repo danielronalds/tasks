@@ -75,6 +75,32 @@ impl App {
                         self.lists[current_list_index].delete_task(current_task_index);
                         current_task_index = current_task_index.saturating_sub(1);
                     }
+                    KeyCode::Char('N') => {
+                        execute!(stdout(), RestorePosition, Clear(ClearType::FromCursorDown))?;
+
+                        let mut name = String::new();
+
+                        loop {
+                            execute!(
+                                stdout(),
+                                Clear(ClearType::CurrentLine),
+                                Print(format!("\r{}", &name))
+                            )?;
+                            if let Event::Key(key) = read()? {
+                                match key.code {
+                                    KeyCode::Char(char) => name.push(char),
+                                    KeyCode::Backspace => {
+                                        name.pop();
+                                    }
+                                    KeyCode::Enter => break,
+                                    _ => (),
+                                }
+                            }
+                        }
+                        let list = List::new(name);
+                        self.lists.insert(current_list_index + 1, list);
+                        current_list_index += 1;
+                    }
                     KeyCode::Char('n') => {
                         execute!(
                             stdout(),

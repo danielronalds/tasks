@@ -71,6 +71,12 @@ impl App {
                             current_task_index = 0;
                         }
                     }
+                    KeyCode::Char('D') => {
+                        if self.lists.len() > 1 {
+                            self.lists.remove(current_list_index);
+                            current_list_index = current_list_index.saturating_sub(1);
+                        }
+                    }
                     KeyCode::Char('d') => {
                         self.lists[current_list_index].delete_task(current_task_index);
                         current_task_index = current_task_index.saturating_sub(1);
@@ -83,6 +89,7 @@ impl App {
                         loop {
                             execute!(
                                 stdout(),
+                                cursor::Show,
                                 Clear(ClearType::CurrentLine),
                                 Print(format!("\r{}", &name))
                             )?;

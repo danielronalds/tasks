@@ -65,6 +65,39 @@ impl App {
                             current_task_index = 0;
                         }
                     }
+                    KeyCode::Char('n') => {
+                        execute!(
+                            stdout(),
+                            RestorePosition,
+                            cursor::MoveDown((self.lists[current_list_index].length() + 1) as u16),
+                        )?;
+
+                        let mut description = String::new();
+
+                        loop {
+                            execute!(
+                                stdout(),
+                                RestorePosition,
+                                cursor::MoveDown(
+                                    (self.lists[current_list_index].length() + 1) as u16
+                                ),
+                                Clear(ClearType::FromCursorDown),
+                                Print(format!("\r{} {}", "[ ]".bold(), &description))
+                            )?;
+                            if let Event::Key(key) = read()? {
+                                match key.code {
+                                    KeyCode::Char(char) => description.push(char),
+                                    KeyCode::Backspace => {
+                                        description.pop();
+                                    }
+                                    KeyCode::Enter => break,
+                                    _ => (),
+                                }
+                            }
+                        }
+
+                        self.lists[current_list_index].add_task(description);
+                    }
                     KeyCode::Char(' ') => {
                         self.lists[current_list_index].toggle_task(current_task_index)
                     }

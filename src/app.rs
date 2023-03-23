@@ -30,10 +30,10 @@ impl App {
 
         let mut current_task_index: usize = 0;
 
-        let current_list_index: usize = 0;
+        let mut current_list_index: usize = 0;
 
         loop {
-            execute!(stdout(), RestorePosition)?;
+            execute!(stdout(), RestorePosition, Clear(ClearType::FromCursorDown))?;
             self.draw(&self.lists[current_list_index])?;
             execute!(
                 stdout(),
@@ -53,7 +53,21 @@ impl App {
                     KeyCode::Char('k') => {
                         current_task_index = current_task_index.saturating_sub(1);
                     }
-                    KeyCode::Char(' ') => self.lists[current_list_index].toggle_task(current_task_index),
+                    KeyCode::Char('l') => {
+                        if current_list_index + 1 < self.lists.len() {
+                            current_list_index += 1;
+                            current_task_index = 0;
+                        }
+                    }
+                    KeyCode::Char('h') => {
+                        current_list_index = current_list_index.saturating_sub(1);
+                        if current_task_index >= self.lists[current_list_index].length() {
+                            current_task_index = 0;
+                        }
+                    }
+                    KeyCode::Char(' ') => {
+                        self.lists[current_list_index].toggle_task(current_task_index)
+                    }
                     _ => (),
                 }
             }

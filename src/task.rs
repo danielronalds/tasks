@@ -37,6 +37,14 @@ impl List {
     pub fn add_task<T: ToString>(&mut self, description: T) {
         self.tasks.push(Task::new(description));
     }
+
+    pub fn delete_task(&mut self, index: usize) {
+        if index >= self.length() {
+            return;
+        }
+
+        self.tasks.remove(index);
+    }
 }
 
 pub struct Task {

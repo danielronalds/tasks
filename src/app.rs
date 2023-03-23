@@ -42,6 +42,12 @@ impl App {
                 cursor::MoveRight(1)
             )?;
 
+            if self.lists[current_list_index].length() == 0 {
+                execute!(stdout(), cursor::Hide)?;
+            } else {
+                execute!(stdout(), cursor::Show)?;
+            }
+
             if let Event::Key(key) = read()? {
                 match key.code {
                     KeyCode::Char('q') => break,
@@ -64,6 +70,10 @@ impl App {
                         if current_task_index >= self.lists[current_list_index].length() {
                             current_task_index = 0;
                         }
+                    }
+                    KeyCode::Char('d') => {
+                        self.lists[current_list_index].delete_task(current_task_index);
+                        current_task_index = current_task_index.saturating_sub(1);
                     }
                     KeyCode::Char('n') => {
                         execute!(

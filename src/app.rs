@@ -57,7 +57,7 @@ impl App {
                     KeyCode::Char('k') => self.move_to_prev_task(),
                     KeyCode::Char('l') => self.move_to_next_list(),
                     KeyCode::Char('h') => self.move_to_prev_list(),
-                    KeyCode::Char('D') => self.delete_current_list(),
+                    KeyCode::Char('D') => self.delete_current_list()?,
                     KeyCode::Char('d') => self.delete_current_task(),
                     KeyCode::Char('N') => self.create_new_list()?,
                     KeyCode::Char('n') => self.create_new_task()?,
@@ -149,19 +149,31 @@ impl App {
         Ok(())
     }
 
-    fn delete_current_list(&mut self) {
+    fn delete_current_list(&mut self) -> Result<()> {
+        self.goto_empty_line()?;
+        let message = format!(
+            "{} This will delete this list, are you sure? y/N",
+            format!("[{}]", "!".bright_red()).bold()
+        );
+        execute!(stdout(), Print(message))?;
+
+        if let Event::Key(key) = read()? {
+            match key.code {
+                KeyCode::Char('y') | KeyCode::Char('Y') => (),
+                _ => return Ok(()),
+            }
+        }
+
         if self.lists.len() > 1 {
             self.lists.remove(self.current_list_index);
             self.current_list_index = self.current_list_index.saturating_sub(1);
         }
+
+        Ok(())
     }
 
     fn create_new_task(&mut self) -> Result<()> {
-        execute!(
-            stdout(),
-            RestorePosition,
-            cursor::MoveDown((self.lists[self.current_list_index].length() + 1) as u16),
-        )?;
+        self.goto_empty_line()?;
 
         let mut description = String::new();
 
@@ -193,5 +205,14 @@ impl App {
     fn delete_current_task(&mut self) {
         self.lists[self.current_list_index].delete_task(self.current_task_index);
         self.current_task_index = self.current_task_index.saturating_sub(1);
+    }
+
+    fn goto_empty_line(&mut self) -> Result<()> {
+        execute!(
+            stdout(),
+            RestorePosition,
+            cursor::MoveDown((self.lists[self.current_list_index].length() + 1) as u16),
+        )?;
+        Ok(())
     }
 }

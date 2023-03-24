@@ -86,8 +86,14 @@ impl App {
             Ok(())
         }
 
-        // At the moment only prints the first list
-        println(list.name().bold())?;
+        let title = format!(
+            "({}/{}) {}",
+            self.current_list_index + 1,
+            self.lists.len(),
+            list.name(),
+        );
+
+        println(title)?;
         for task in list.tasks_iter() {
             println(task.to_string())?;
         }
@@ -125,11 +131,17 @@ impl App {
         let mut name = String::new();
 
         loop {
+            let print_input = format!(
+                "\r({}/{}) {}",
+                self.current_list_index + 2,
+                self.lists.len() + 1,
+                &name,
+            );
             execute!(
                 stdout(),
                 cursor::Show,
                 Clear(ClearType::CurrentLine),
-                Print(format!("\r{}", &name))
+                Print(print_input)
             )?;
             if let Event::Key(key) = read()? {
                 match key.code {
@@ -153,7 +165,7 @@ impl App {
         self.goto_empty_line()?;
         let message = format!(
             "{} This will delete this list, are you sure? y/N",
-            format!("[{}]", "!".bright_red()).bold()
+            format!("[{}]", "!".bright_red())
         );
         execute!(stdout(), Print(message))?;
 
@@ -183,7 +195,7 @@ impl App {
                 RestorePosition,
                 cursor::MoveDown((self.lists[self.current_list_index].length() + 1) as u16),
                 Clear(ClearType::FromCursorDown),
-                Print(format!("\r{} {}", "[ ]".bold(), &description))
+                Print(format!("\r{} {}", "[ ]", &description))
             )?;
             if let Event::Key(key) = read()? {
                 match key.code {

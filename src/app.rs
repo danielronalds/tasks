@@ -138,6 +138,7 @@ impl App {
                         name.pop();
                     }
                     KeyCode::Enter => break,
+                    KeyCode::Esc => return Ok(()),
                     _ => (),
                 }
             }
@@ -178,6 +179,7 @@ impl App {
                     KeyCode::Backspace => {
                         description.pop();
                     }
+                    KeyCode::Esc => return Ok(()),
                     KeyCode::Enter => break,
                     _ => (),
                 }

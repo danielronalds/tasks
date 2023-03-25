@@ -53,10 +53,10 @@ impl App {
             if let Event::Key(key) = read()? {
                 match key.code {
                     KeyCode::Char('q') => break,
-                    KeyCode::Char('j') => self.move_to_next_task(),
-                    KeyCode::Char('k') => self.move_to_prev_task(),
-                    KeyCode::Char('l') => self.move_to_next_list(),
-                    KeyCode::Char('h') => self.move_to_prev_list(),
+                    KeyCode::Down | KeyCode::Char('j') => self.move_to_next_task(),
+                    KeyCode::Up | KeyCode::Char('k') => self.move_to_prev_task(),
+                    KeyCode::Right | KeyCode::Char('l') => self.move_to_next_list(),
+                    KeyCode::Left | KeyCode::Char('h') => self.move_to_prev_list(),
                     KeyCode::Char('D') => self.delete_current_list()?,
                     KeyCode::Char('d') => self.delete_current_task(),
                     KeyCode::Char('N') => self.create_new_list()?,

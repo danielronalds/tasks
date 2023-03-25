@@ -1,6 +1,6 @@
 use colored::Colorize;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct List {
     tasks: Vec<Task>,
     name: String,
@@ -48,7 +48,7 @@ impl List {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Task {
     description: String,
     completed: bool,

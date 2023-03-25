@@ -1,5 +1,6 @@
 mod task;
 mod app;
+mod serialisation;
 
 use app::App;
 use task::List;
@@ -15,6 +16,11 @@ fn main() {
     lists[2].add_task("this another task on the third list");
     lists[2].add_task("Wow look another task on the third list");
     lists[2].add_task("...yet another task on the third list");
-    let mut app = App::new(lists);
-    app.run().unwrap();
+
+    let mut app = App::new(lists.clone());
+
+    match app.run() {
+        Ok(lists) => serialisation::serialize(lists).unwrap(),
+        Err(e) => eprintln!("Error: {}", e)
+    };
 }

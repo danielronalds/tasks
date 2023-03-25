@@ -1,5 +1,6 @@
 use colored::Colorize;
 
+#[derive(Clone)]
 pub struct List {
     tasks: Vec<Task>,
     name: String,
@@ -47,6 +48,7 @@ impl List {
     }
 }
 
+#[derive(Clone)]
 pub struct Task {
     description: String,
     completed: bool,
@@ -66,6 +68,13 @@ impl Task {
         self.completed = !self.completed;
     }
 
+    pub fn status(&self) -> bool {
+        self.completed
+    }
+
+    pub fn description(&self) -> String {
+        self.description.clone()
+    }
 }
 
 impl ToString for Task {

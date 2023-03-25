@@ -25,7 +25,7 @@ impl App {
         }
     }
 
-    pub fn run(&mut self) -> Result<()> {
+    pub fn run(&mut self) -> Result<Vec<List>> {
         // Saving the start position of the app
         execute!(
             stdout(),
@@ -76,7 +76,7 @@ impl App {
             Clear(ClearType::FromCursorDown)
         )?;
 
-        Ok(())
+        Ok(self.lists.clone())
     }
 
     fn draw(&self, list: &List) -> Result<()> {

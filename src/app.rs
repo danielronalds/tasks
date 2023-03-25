@@ -58,7 +58,13 @@ impl App {
                     KeyCode::Right | KeyCode::Char('l') => self.move_to_next_list(),
                     KeyCode::Left | KeyCode::Char('h') => self.move_to_prev_list(),
                     KeyCode::Char('D') => self.delete_current_list()?,
-                    KeyCode::Char('d') => self.delete_current_task(),
+                    KeyCode::Char('d') => {
+                        if let Event::Key(key) = read()? {
+                            if key.code == KeyCode::Char('d') {
+                                self.delete_current_task()
+                            }
+                        }
+                    }
                     KeyCode::Char('N') => self.create_new_list()?,
                     KeyCode::Char('n') => self.create_new_task()?,
                     KeyCode::Char(' ') => {

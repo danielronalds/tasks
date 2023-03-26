@@ -1,7 +1,7 @@
 mod serialisation;
 mod task;
 
-pub use crate::app::serialisation::{serialize, deserialise};
+pub use crate::app::serialisation::{deserialise, serialize};
 
 use crate::app::task::List;
 
@@ -71,8 +71,10 @@ impl TasksApp {
                     KeyCode::Char('D') => self.delete_current_list()?,
                     KeyCode::Char('d') => {
                         if let Event::Key(key) = read()? {
-                            if key.code == KeyCode::Char('d') {
-                                self.delete_current_task()
+                            match key.code {
+                                KeyCode::Char('d') => self.delete_current_task(),
+                                KeyCode::Char('c') => self.delete_completed_tasks(),
+                                _ => (),
                             }
                         }
                     }
@@ -126,8 +128,9 @@ impl TasksApp {
             "N        Create new list",
             "D        Delete current list",
             "dd       Delete current task",
+            "dc       Delete completed tasks from the current list",
             "?        Show this menu",
-            "q        Quit"
+            "q        Quit",
         ];
 
         for keybind in keybinds {
@@ -256,6 +259,21 @@ impl TasksApp {
     fn delete_current_task(&mut self) {
         self.lists[self.current_list_index].delete_task(self.current_task_index);
         self.current_task_index = self.current_task_index.saturating_sub(1);
+    }
+
+    fn delete_completed_tasks(&mut self) {
+        let mut completed_tasks = vec![];
+
+        for (index, task) in self.lists[self.current_list_index].tasks_iter().enumerate() {
+            if task.status() == true {
+                completed_tasks.insert(0, index);
+            }
+        }
+
+        for index in completed_tasks {
+            self.lists[self.current_list_index].delete_task(index);
+            self.current_task_index = self.current_task_index.saturating_sub(1);
+        }
     }
 
     fn goto_empty_line(&mut self) -> Result<()> {

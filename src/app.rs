@@ -262,18 +262,8 @@ impl TasksApp {
     }
 
     fn delete_completed_tasks(&mut self) {
-        let mut completed_tasks = vec![];
-
-        for (index, task) in self.lists[self.current_list_index].tasks_iter().enumerate() {
-            if task.status() == true {
-                completed_tasks.insert(0, index);
-            }
-        }
-
-        for index in completed_tasks {
-            self.lists[self.current_list_index].delete_task(index);
-            self.current_task_index = self.current_task_index.saturating_sub(1);
-        }
+        self.lists[self.current_list_index].delete_completed_tasks();
+        self.current_task_index = 0;
     }
 
     fn goto_empty_line(&mut self) -> Result<()> {

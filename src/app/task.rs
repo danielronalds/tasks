@@ -46,6 +46,15 @@ impl List {
 
         self.tasks.remove(index);
     }
+
+    pub fn delete_completed_tasks(&mut self) {
+        self.tasks = self
+            .tasks
+            .iter()
+            .filter(|task| !task.status())
+            .map(|task| task.to_owned())
+            .collect();
+    }
 }
 
 #[derive(Clone, Debug)]

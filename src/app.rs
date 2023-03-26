@@ -16,6 +16,12 @@ use crossterm::{
 };
 use std::io::stdout;
 
+fn println<T: ToString>(text: T) -> Result<()> {
+    let text = format!("{}\n\r", text.to_string());
+    execute!(stdout(), Print(text))?;
+    Ok(())
+}
+
 pub struct TasksApp {
     lists: Vec<List>,
     current_list_index: usize,
@@ -58,7 +64,6 @@ impl TasksApp {
 
             if let Event::Key(key) = read()? {
                 match key.code {
-                    KeyCode::Char('q') => break,
                     KeyCode::Down | KeyCode::Char('j') => self.move_to_next_task(),
                     KeyCode::Up | KeyCode::Char('k') => self.move_to_prev_task(),
                     KeyCode::Right | KeyCode::Char('l') => self.move_to_next_list(),
@@ -73,9 +78,11 @@ impl TasksApp {
                     }
                     KeyCode::Char('N') => self.create_new_list()?,
                     KeyCode::Char('n') => self.create_new_task()?,
+                    KeyCode::Char('?') => self.draw_help()?,
                     KeyCode::Char(' ') => {
                         self.lists[self.current_list_index].toggle_task(self.current_task_index)
                     }
+                    KeyCode::Char('q') => break,
                     _ => (),
                 }
             }
@@ -92,12 +99,6 @@ impl TasksApp {
     }
 
     fn draw(&self, list: &List) -> Result<()> {
-        fn println<T: ToString>(text: T) -> Result<()> {
-            let text = format!("{}\n\r", text.to_string());
-            execute!(stdout(), Print(text))?;
-            Ok(())
-        }
-
         let title = format!(
             "({}/{}) {}",
             self.current_list_index + 1,
@@ -109,6 +110,32 @@ impl TasksApp {
         for task in list.tasks_iter() {
             println(task.to_string())?;
         }
+
+        Ok(())
+    }
+
+    fn draw_help(&self) -> Result<()> {
+        execute!(stdout(), RestorePosition, Clear(ClearType::FromCursorDown))?;
+
+        println("Keybinds")?;
+        let keybinds = vec![
+            "j/k      Move between tasks",
+            "h/l      Move between lists",
+            "space    Toggle current tasks status",
+            "n        Create new task",
+            "N        Create new list",
+            "D        Delete current list",
+            "dd       Delete current task",
+            "?        Show this menu",
+            "q        Quit"
+        ];
+
+        for keybind in keybinds {
+            println(keybind)?;
+        }
+
+        println("\nPress any key to return")?;
+        read()?;
 
         Ok(())
     }

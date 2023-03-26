@@ -74,6 +74,7 @@ impl TasksApp {
                             match key.code {
                                 KeyCode::Char('d') => self.delete_current_task(),
                                 KeyCode::Char('c') => self.delete_completed_tasks(),
+                                KeyCode::Char('C') => self.delete_completed_tasks_on_all_lists(),
                                 _ => (),
                             }
                         }
@@ -129,6 +130,7 @@ impl TasksApp {
             "D        Delete current list",
             "dd       Delete current task",
             "dc       Delete completed tasks from the current list",
+            "dC       Delete completed tasks from the all lists",
             "?        Show this menu",
             "q        Quit",
         ];
@@ -263,6 +265,13 @@ impl TasksApp {
 
     fn delete_completed_tasks(&mut self) {
         self.lists[self.current_list_index].delete_completed_tasks();
+        self.current_task_index = 0;
+    }
+
+    fn delete_completed_tasks_on_all_lists(&mut self) {
+        for list in &mut self.lists {
+            list.delete_completed_tasks();
+        }
         self.current_task_index = 0;
     }
 

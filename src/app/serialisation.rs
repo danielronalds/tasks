@@ -1,4 +1,4 @@
-use crate::task::List;
+use crate::app::task::List;
 use std::fs::File;
 use std::io::prelude::{Read, Write};
 
@@ -20,7 +20,7 @@ pub fn serialize(lists: Vec<List>) -> std::io::Result<()> {
                 task.description()
             )?;
         }
-        writeln!(file, "\n")?;
+        writeln!(file)?;
     }
 
     file.flush()?;

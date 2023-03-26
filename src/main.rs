@@ -1,16 +1,14 @@
-mod task;
 mod app;
-mod serialisation;
 
-use app::App;
+use app::{TasksApp, serialize, deserialise};
 
 fn main() {
-    let lists = serialisation::deserialise().expect("Failed to open file");
+    let lists = deserialise().expect("Failed to open file");
 
-    let mut app = App::new(lists.clone());
+    let mut app = TasksApp::new(lists.clone());
 
     match app.run() {
-        Ok(lists) => serialisation::serialize(lists).unwrap(),
+        Ok(lists) => serialize(lists).unwrap(),
         Err(e) => eprintln!("Error: {}", e)
     };
 }

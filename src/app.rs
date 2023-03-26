@@ -1,4 +1,10 @@
-use crate::task::List;
+mod serialisation;
+mod task;
+
+pub use crate::app::serialisation::{serialize, deserialise};
+
+use crate::app::task::List;
+
 use colored::Colorize;
 use crossterm::{
     cursor::{self, RestorePosition, SavePosition},
@@ -10,13 +16,13 @@ use crossterm::{
 };
 use std::io::stdout;
 
-pub struct App {
+pub struct TasksApp {
     lists: Vec<List>,
     current_list_index: usize,
     current_task_index: usize,
 }
 
-impl App {
+impl TasksApp {
     pub fn new(lists: Vec<List>) -> Self {
         Self {
             lists,

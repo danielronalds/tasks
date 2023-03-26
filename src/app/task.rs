@@ -55,6 +55,22 @@ impl List {
             .map(|task| task.to_owned())
             .collect();
     }
+
+    pub fn sort_list(&mut self) {
+        let mut sorted_tasks: Vec<Task> = self
+            .tasks
+            .iter()
+            .filter(|task| task.status())
+            .map(|task| task.to_owned())
+            .collect();
+        sorted_tasks.extend(
+            self.tasks
+                .iter()
+                .filter(|task| !task.status())
+                .map(|task| task.to_owned()),
+        );
+        self.tasks = sorted_tasks;
+    }
 }
 
 #[derive(Clone, Debug)]

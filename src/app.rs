@@ -81,6 +81,8 @@ impl TasksApp {
                     }
                     KeyCode::Char('N') => self.create_new_list()?,
                     KeyCode::Char('n') => self.create_new_task()?,
+                    KeyCode::Char('s') => self.sort_current_list(),
+                    KeyCode::Char('S') => self.sort_all_lists(),
                     KeyCode::Char('?') => self.draw_help()?,
                     KeyCode::Char(' ') => {
                         self.lists[self.current_list_index].toggle_task(self.current_task_index)
@@ -256,6 +258,17 @@ impl TasksApp {
 
         self.lists[self.current_list_index].add_task(description);
         Ok(())
+    }
+
+    fn sort_current_list(&mut self) {
+        self.lists[self.current_list_index].sort_list();
+    }
+
+    fn sort_all_lists(&mut self) {
+        self.lists = self.lists.iter_mut().map(|list| {
+            list.sort_list();
+            list.to_owned()
+        }).collect();
     }
 
     fn delete_current_task(&mut self) {

@@ -54,5 +54,5 @@ pub fn deserialise() -> std::io::Result<Vec<List>> {
         lists.push(List::new(line.to_string()));
     }
 
-    return Ok(lists);
+    Ok(lists)
 }

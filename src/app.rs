@@ -210,8 +210,8 @@ impl TasksApp {
     fn delete_current_list(&mut self) -> Result<()> {
         self.goto_empty_line()?;
         let message = format!(
-            "{} This will delete this list, are you sure? y/N",
-            format!("[{}]", "!".bright_red())
+            "[{}] This will delete this list, are you sure? y/N",
+            "!".bright_red()
         );
         execute!(stdout(), Print(message))?;
 
@@ -265,10 +265,14 @@ impl TasksApp {
     }
 
     fn sort_all_lists(&mut self) {
-        self.lists = self.lists.iter_mut().map(|list| {
-            list.sort_list();
-            list.to_owned()
-        }).collect();
+        self.lists = self
+            .lists
+            .iter_mut()
+            .map(|list| {
+                list.sort_list();
+                list.to_owned()
+            })
+            .collect();
     }
 
     fn delete_current_task(&mut self) {

@@ -107,8 +107,8 @@ impl ToString for Task {
         let mut string = String::new();
 
         string.push_str(&match self.completed {
-            true => format!("{}", format!("[{}] ", "✔".bright_green())),
-            false => format!("{}", "[ ] "),
+            true => format!("[{}] ", "✔".bright_green()),
+            false => "[ ] ".to_string(),
         });
 
         string.push_str(&self.description);

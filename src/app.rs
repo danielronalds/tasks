@@ -47,7 +47,12 @@ impl TasksApp {
         enable_raw_mode()?;
 
         loop {
-            execute!(stdout(), RestorePosition, Clear(ClearType::FromCursorDown))?;
+            execute!(
+                stdout(),
+                RestorePosition,
+                Clear(ClearType::FromCursorDown),
+                cursor::SetCursorStyle::SteadyUnderScore
+            )?;
             self.draw(&self.lists[self.current_list_index])?;
             execute!(
                 stdout(),
@@ -133,6 +138,8 @@ impl TasksApp {
             "dd       Delete current task",
             "dc       Delete completed tasks from the current list",
             "dC       Delete completed tasks from the all lists",
+            "s        Sorts the current list",
+            "S        Sorts all lists",
             "?        Show this menu",
             "q        Quit",
         ];
@@ -172,7 +179,13 @@ impl TasksApp {
     }
 
     fn create_new_list(&mut self) -> Result<()> {
-        execute!(stdout(), RestorePosition, Clear(ClearType::FromCursorDown))?;
+        execute!(
+            stdout(),
+            RestorePosition,
+            Clear(ClearType::FromCursorDown),
+            cursor::Show,
+            cursor::SetCursorStyle::SteadyBlock
+        )?;
 
         let mut name = String::new();
 
@@ -232,6 +245,7 @@ impl TasksApp {
 
     fn create_new_task(&mut self) -> Result<()> {
         self.goto_empty_line()?;
+        execute!(stdout(), cursor::Show, cursor::SetCursorStyle::SteadyBlock,)?; 
 
         let mut description = String::new();
 

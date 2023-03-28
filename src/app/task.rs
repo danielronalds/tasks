@@ -8,10 +8,9 @@ pub struct List {
 
 impl List {
     pub fn new<T: ToString>(name: T) -> Self {
-        let name = name.to_string();
         Self {
             tasks: vec![],
-            name,
+            name: name.to_string(),
         }
     }
 
@@ -36,6 +35,10 @@ impl List {
     }
 
     pub fn add_task<T: ToString>(&mut self, description: T) {
+        if description.to_string().is_empty() {
+            return;
+        }
+
         self.tasks.push(Task::new(description));
     }
 
@@ -57,19 +60,13 @@ impl List {
     }
 
     pub fn sort_list(&mut self) {
-        let mut sorted_tasks: Vec<Task> = self
+        self.tasks = self
             .tasks
             .iter()
             .filter(|task| task.status())
+            .chain(self.tasks.iter().filter(|task| !task.status()))
             .map(|task| task.to_owned())
             .collect();
-        sorted_tasks.extend(
-            self.tasks
-                .iter()
-                .filter(|task| !task.status())
-                .map(|task| task.to_owned()),
-        );
-        self.tasks = sorted_tasks;
     }
 }
 
@@ -81,10 +78,8 @@ pub struct Task {
 
 impl Task {
     pub fn new<T: ToString>(description: T) -> Task {
-        let description = description.to_string();
-
         Self {
-            description,
+            description: description.to_string(),
             completed: false,
         }
     }

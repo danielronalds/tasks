@@ -1,7 +1,7 @@
 mod serialisation;
 mod task;
 
-pub use crate::app::serialisation::{deserialise, serialize};
+pub use crate::app::serialisation::{deserialise, serialise, new_tasks_data};
 
 use crate::app::task::List;
 

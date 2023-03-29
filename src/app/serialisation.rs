@@ -1,10 +1,13 @@
 use crate::app::task::List;
 use std::fs::File;
-use std::io::prelude::{Read, Write};
+use std::io::{
+    prelude::{Read, Write},
+    Result,
+};
 
 const FILE_NAME: &str = ".tasks.md";
 
-pub fn serialize(lists: Vec<List>) -> std::io::Result<()> {
+pub fn serialise(lists: Vec<List>) -> Result<()> {
     let mut file = File::create(FILE_NAME)?;
 
     for list in lists {
@@ -27,7 +30,7 @@ pub fn serialize(lists: Vec<List>) -> std::io::Result<()> {
     Ok(())
 }
 
-pub fn deserialise() -> std::io::Result<Vec<List>> {
+pub fn deserialise() -> Result<Vec<List>> {
     let mut lists: Vec<List> = vec![];
 
     let mut file = File::open(FILE_NAME)?;
@@ -55,4 +58,14 @@ pub fn deserialise() -> std::io::Result<Vec<List>> {
     }
 
     Ok(lists)
+}
+
+pub fn new_tasks_data<T: ToString>(list_name: T) -> Vec<List> {
+    let mut name = list_name.to_string();
+
+    if name.is_empty() {
+        name = "Main".to_string();
+    }
+
+    vec![List::new(name)]
 }

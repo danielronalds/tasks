@@ -87,6 +87,7 @@ impl TasksApp {
                     KeyCode::Char('N') => self.create_new_list()?,
                     KeyCode::Char('n') => self.create_new_task()?,
                     KeyCode::Char('r') => self.reword_current_task()?,
+                    KeyCode::Char('R') => self.rename_current_list()?,
                     KeyCode::Char('s') => self.sort_current_list(),
                     KeyCode::Char('S') => self.sort_all_lists(),
                     KeyCode::Char('?') => self.draw_help()?,
@@ -136,10 +137,11 @@ impl TasksApp {
             "n        Create new task",
             "N        Create new list",
             "r        Reword current task",
-            "D        Delete current list",
+            "R        Rename current list",
             "dd       Delete current task",
             "dc       Delete completed tasks from the current list",
             "dC       Delete completed tasks from the all lists",
+            "D        Delete current list",
             "s        Sorts the current list",
             "S        Sorts all lists",
             "?        Show this menu",
@@ -219,6 +221,46 @@ impl TasksApp {
         let list = List::new(name);
         self.lists.insert(self.current_list_index + 1, list);
         self.current_list_index += 1;
+        Ok(())
+    }
+
+    fn rename_current_list(&mut self) -> Result<()> {
+        execute!(
+            stdout(),
+            RestorePosition,
+            Clear(ClearType::CurrentLine),
+            cursor::Show,
+            cursor::SetCursorStyle::SteadyBlock
+        )?;
+
+        let mut new_name = self.lists[self.current_list_index].name();
+
+        loop {
+            let print_input = format!(
+                "\r({}/{}) {}",
+                self.current_list_index + 1,
+                self.lists.len(),
+                &new_name,
+            );
+            execute!(
+                stdout(),
+                cursor::Show,
+                Clear(ClearType::CurrentLine),
+                Print(print_input)
+            )?;
+            if let Event::Key(key) = read()? {
+                match key.code {
+                    KeyCode::Char(char) => new_name.push(char),
+                    KeyCode::Backspace => {
+                        new_name.pop();
+                    }
+                    KeyCode::Enter => break,
+                    KeyCode::Esc => return Ok(()),
+                    _ => (),
+                }
+            }
+        }
+        self.lists[self.current_list_index].rename_list(new_name);
         Ok(())
     }
 

@@ -34,6 +34,10 @@ impl List {
         self.tasks.len()
     }
 
+    pub fn rename_list<T: ToString>(&mut self, new_name: T) {
+        self.name = new_name.to_string();
+    }
+
     pub fn add_task<T: ToString>(&mut self, description: T) {
         if description.to_string().is_empty() {
             return;

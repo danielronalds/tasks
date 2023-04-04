@@ -42,6 +42,14 @@ impl List {
         self.tasks.push(Task::new(description));
     }
 
+    pub fn reword_task<T: ToString>(&mut self, index: usize, description: T) {
+        if index >= self.length() {
+            return;
+        }
+
+        self.tasks[index].description = description.to_string();
+    }
+
     pub fn delete_task(&mut self, index: usize) {
         if index >= self.length() {
             return;

@@ -1,7 +1,7 @@
 mod serialisation;
 mod task;
 
-pub use crate::app::serialisation::{deserialise, serialise, new_tasks_data};
+pub use crate::app::serialisation::{deserialise, new_tasks_data, serialise};
 
 use crate::app::task::List;
 
@@ -86,6 +86,7 @@ impl TasksApp {
                     }
                     KeyCode::Char('N') => self.create_new_list()?,
                     KeyCode::Char('n') => self.create_new_task()?,
+                    KeyCode::Char('r') => self.reword_current_task()?,
                     KeyCode::Char('s') => self.sort_current_list(),
                     KeyCode::Char('S') => self.sort_all_lists(),
                     KeyCode::Char('?') => self.draw_help()?,
@@ -134,6 +135,7 @@ impl TasksApp {
             "space    Toggle current tasks status",
             "n        Create new task",
             "N        Create new list",
+            "r        Reword current task",
             "D        Delete current list",
             "dd       Delete current task",
             "dc       Delete completed tasks from the current list",
@@ -245,7 +247,7 @@ impl TasksApp {
 
     fn create_new_task(&mut self) -> Result<()> {
         self.goto_empty_line()?;
-        execute!(stdout(), cursor::Show, cursor::SetCursorStyle::SteadyBlock,)?; 
+        execute!(stdout(), cursor::Show, cursor::SetCursorStyle::SteadyBlock,)?;
 
         let mut description = String::new();
 
@@ -271,6 +273,52 @@ impl TasksApp {
         }
 
         self.lists[self.current_list_index].add_task(description);
+        Ok(())
+    }
+
+    fn reword_current_task(&mut self) -> Result<()> {
+        if self.current_task_index >= self.lists[self.current_list_index].length() {
+            return Ok(());
+        }
+
+        execute!(stdout(), cursor::Show, cursor::SetCursorStyle::SteadyBlock,)?;
+
+        let task = self.lists[self.current_list_index]
+            .tasks_iter()
+            .nth(self.current_task_index)
+            .expect("We know this task exists so this can't fail");
+
+        let mut description = task.description();
+
+        loop {
+            execute!(
+                stdout(),
+                RestorePosition,
+                cursor::MoveDown((self.current_task_index + 1) as u16),
+                Clear(ClearType::CurrentLine),
+                Print(format!(
+                    "\r{} {}",
+                    match task.status() {
+                        true => format!("[{}]", "✔".bright_green()),
+                        false => "[ ]".to_string(),
+                    },
+                    &description
+                ))
+            )?;
+            if let Event::Key(key) = read()? {
+                match key.code {
+                    KeyCode::Char(char) => description.push(char),
+                    KeyCode::Backspace => {
+                        description.pop();
+                    }
+                    KeyCode::Esc => return Ok(()),
+                    KeyCode::Enter => break,
+                    _ => (),
+                }
+            }
+        }
+
+        self.lists[self.current_list_index].reword_task(self.current_task_index, description);
         Ok(())
     }
 

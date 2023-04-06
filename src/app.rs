@@ -72,7 +72,9 @@ impl TasksApp {
                     KeyCode::Down | KeyCode::Char('j') => self.move_to_next_task(),
                     KeyCode::Up | KeyCode::Char('k') => self.move_to_prev_task(),
                     KeyCode::Right | KeyCode::Char('l') => self.move_to_next_list(),
+                    KeyCode::Char('L') => self.move_current_task_to_next_list(),
                     KeyCode::Left | KeyCode::Char('h') => self.move_to_prev_list(),
+                    KeyCode::Char('H') => self.move_current_task_to_prev_list(),
                     KeyCode::Char('D') => self.delete_current_list()?,
                     KeyCode::Char('d') => {
                         if let Event::Key(key) = read()? {
@@ -134,6 +136,7 @@ impl TasksApp {
         let keybinds = vec![
             "j/k      Move between tasks",
             "h/l      Move between lists",
+            "H/L      Move current task between lists",
             "space    Toggle current tasks status",
             "n        Create new task",
             "N        Create new list",
@@ -182,6 +185,54 @@ impl TasksApp {
 
     fn move_to_prev_task(&mut self) {
         self.current_task_index = self.current_task_index.saturating_sub(1);
+    }
+
+    fn get_current_tasks_description_and_status(&self) -> Option<(String, bool)> {
+        let task = self.lists[self.current_list_index]
+            .tasks_iter()
+            .map(|x| x.to_owned())
+            .nth(self.current_task_index)?;
+        Some((task.description(), task.status()))
+    }
+
+    fn move_current_task_to_next_list(&mut self) {
+        if self.current_list_index + 1 >= self.lists.len() {
+            return;
+        }
+
+        let (description, status) = match self.get_current_tasks_description_and_status() {
+            Some(task) => task,
+            None => return,
+        };
+
+        self.lists[self.current_list_index].delete_task(self.current_task_index);
+        self.move_to_next_list();
+        self.lists[self.current_list_index].add_task(description);
+        self.current_task_index = self.lists[self.current_list_index].length() - 1;
+
+        if status {
+            self.lists[self.current_list_index].toggle_task(self.current_task_index);
+        }
+    }
+
+    fn move_current_task_to_prev_list(&mut self) {
+        if self.current_list_index == 0 {
+            return;
+        }
+
+        let (description, status) = match self.get_current_tasks_description_and_status() {
+            Some(task) => task,
+            None => return,
+        };
+
+        self.lists[self.current_list_index].delete_task(self.current_task_index);
+        self.move_to_prev_list();
+        self.lists[self.current_list_index].add_task(description);
+        self.current_task_index = self.lists[self.current_list_index].length() - 1;
+
+        if status {
+            self.lists[self.current_list_index].toggle_task(self.current_task_index);
+        }
     }
 
     fn create_new_list(&mut self) -> Result<()> {

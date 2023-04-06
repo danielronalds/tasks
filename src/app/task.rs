@@ -46,6 +46,16 @@ impl List {
         self.tasks.push(Task::new(description));
     }
 
+    pub fn insert_task(&mut self, index: usize, task: Task) {
+        if index > self.tasks.len() {
+            if index - self.tasks.len() == 1 {
+                self.tasks.insert(index - 1, task);
+            } 
+            return;
+        }
+        self.tasks.insert(index, task);
+    }
+
     pub fn reword_task<T: ToString>(&mut self, index: usize, description: T) {
         if index >= self.length() {
             return;

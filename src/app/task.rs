@@ -71,6 +71,10 @@ impl List {
             .collect();
     }
 
+    pub fn delete_all_tasks(&mut self) {
+        self.tasks = vec![];
+    }
+
     pub fn sort_list(&mut self) {
         self.tasks = self
             .tasks

@@ -78,6 +78,7 @@ impl TasksApp {
                         if let Event::Key(key) = read()? {
                             match key.code {
                                 KeyCode::Char('d') => self.delete_current_task(),
+                                KeyCode::Char('A') => self.delete_all_tasks(),
                                 KeyCode::Char('c') => self.delete_completed_tasks(),
                                 KeyCode::Char('C') => self.delete_completed_tasks_on_all_lists(),
                                 _ => (),
@@ -139,6 +140,7 @@ impl TasksApp {
             "r        Reword current task",
             "R        Rename current list",
             "dd       Delete current task",
+            "da       Delete all tasks from the current list",
             "dc       Delete completed tasks from the current list",
             "dC       Delete completed tasks from the all lists",
             "D        Delete current list",
@@ -386,6 +388,11 @@ impl TasksApp {
 
     fn delete_completed_tasks(&mut self) {
         self.lists[self.current_list_index].delete_completed_tasks();
+        self.current_task_index = 0;
+    }
+
+    fn delete_all_tasks(&mut self) {
+        self.lists[self.current_list_index].delete_all_tasks();
         self.current_task_index = 0;
     }
 

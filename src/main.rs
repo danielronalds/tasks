@@ -4,6 +4,8 @@ use app::{deserialise, new_tasks_data, serialise, TasksApp};
 
 use crossterm::event::{read, Event, KeyCode};
 
+const DEFAULT_LIST_NAME: &str = "Main";
+
 fn main() {
     let lists = match deserialise() {
         Ok(lists) => lists,
@@ -13,9 +15,9 @@ fn main() {
             match read().expect("failed to read") {
                 Event::Key(key) => match key.code {
                     KeyCode::Char('n') | KeyCode::Char('N') => return,
-                    _ => new_tasks_data("Main"),
+                    _ => new_tasks_data(DEFAULT_LIST_NAME),
                 },
-                _ => new_tasks_data("Main"),
+                _ => new_tasks_data(DEFAULT_LIST_NAME),
             }
         }
     };

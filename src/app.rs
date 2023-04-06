@@ -136,6 +136,7 @@ impl TasksApp {
     fn draw_help(&self) -> Result<()> {
         execute!(stdout(), RestorePosition, Clear(ClearType::FromCursorDown))?;
 
+        println(format!("Tasks v{}", env!("CARGO_PKG_VERSION")))?;
         println("Keybinds")?;
         let keybinds = vec![
             "j/k      Move between tasks",

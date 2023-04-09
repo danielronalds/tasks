@@ -70,7 +70,10 @@ pub fn deserialise() -> Result<Vec<List>> {
             continue;
         }
 
-        lists.push(List::new(line.to_string()));
+        lists.push(
+            List::new(line.to_string())
+                .expect("We have checked to see if this string is empty already"),
+        );
     }
 
     Ok(lists)
@@ -92,5 +95,5 @@ pub fn new_tasks_data<T: ToString>(list_name: T) -> Vec<List> {
         name = "Main".to_string();
     }
 
-    vec![List::new(name)]
+    vec![List::new(name).expect("Name can never be empty")]
 }

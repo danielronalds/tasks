@@ -309,9 +309,10 @@ impl TasksApp {
                 }
             }
         }
-        let list = List::new(name);
-        self.lists.insert(self.current_list_index + 1, list);
-        self.current_list_index += 1;
+        if let Ok(list) = List::new(name) {
+            self.lists.insert(self.current_list_index + 1, list);
+            self.current_list_index += 1;
+        }
         Ok(())
     }
 

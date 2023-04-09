@@ -13,11 +13,20 @@ impl List {
     /// # Arguments
     ///
     /// * `name` - The name the list should have
-    pub fn new<T: ToString>(name: T) -> Self {
-        Self {
-            tasks: vec![],
-            name: name.to_string(),
+    ///
+    /// # Returns
+    /// An error if `name` is empty, Otherwise an Ok() containing a new List
+    pub fn new<T: ToString>(name: T) -> Result<Self, ()> {
+        let name = name.to_string();
+
+        if name.is_empty() {
+            return Err(());
         }
+
+        Ok(Self {
+            tasks: vec![],
+            name,
+        })
     }
 
     /// Returns an owned copy of the list name
@@ -48,12 +57,18 @@ impl List {
         self.tasks.len()
     }
 
-    /// Renames the name of the list
+    /// Renames the name of the list. Method returns early if `new_name` is empty
     ///
     /// # Arguments
     /// * `new_name` - The new name of the list
     pub fn rename_list<T: ToString>(&mut self, new_name: T) {
-        self.name = new_name.to_string();
+        let new_name = new_name.to_string();
+
+        if new_name.is_empty() {
+            return;
+        }
+
+        self.name = new_name;
     }
 
     /// Creates and adds a new task to the list. The task will not be completed by default, and the
@@ -80,7 +95,7 @@ impl List {
         if index > self.tasks.len() {
             if index - self.tasks.len() == 1 {
                 self.tasks.insert(index - 1, task);
-            } 
+            }
             return;
         }
         self.tasks.insert(index, task);
@@ -92,7 +107,7 @@ impl List {
     /// * `index`        - The index of the task to change the description of
     /// * `description`  - The new description of the task
     pub fn reword_task<T: ToString>(&mut self, index: usize, description: T) {
-        if index >= self.length() {
+        if index >= self.length() || description.to_string().is_empty() {
             return;
         }
 

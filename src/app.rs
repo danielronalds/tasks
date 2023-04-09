@@ -16,12 +16,20 @@ use crossterm::{
 };
 use std::io::stdout;
 
+/// Prints a string followed by a new line and carriage return to the stdout using Crossterm.
+/// Works in raw mode
+///
+/// # Arguments
+///
+/// * `text` - The text to write to stdout
+///
 fn println<T: ToString>(text: T) -> Result<()> {
     let text = format!("{}\n\r", text.to_string());
     execute!(stdout(), Print(text))?;
     Ok(())
 }
 
+/// The application
 pub struct TasksApp {
     lists: Vec<List>,
     current_list_index: usize,
@@ -30,6 +38,11 @@ pub struct TasksApp {
 }
 
 impl TasksApp {
+    /// Builds a new instance of the tasks app
+    ///
+    /// # Arguments
+    ///
+    /// * `lists` - The lists the app should have to start with
     pub fn new(lists: Vec<List>) -> Self {
         Self {
             lists,
@@ -39,6 +52,11 @@ impl TasksApp {
         }
     }
 
+    /// Runs the program
+    ///
+    /// # Returns
+    ///
+    /// The finished state of the lists after the program has run
     pub fn run(&mut self) -> Result<Vec<List>> {
         // Saving the start position of the app
         execute!(
@@ -117,6 +135,11 @@ impl TasksApp {
         Ok(self.lists.clone())
     }
 
+    /// Draws the given list of the app
+    ///
+    /// # Arguments
+    ///
+    /// * `list` - The list to draw
     fn draw(&self, list: &List) -> Result<()> {
         let title = format!(
             "({}/{}) {}",
@@ -133,6 +156,7 @@ impl TasksApp {
         Ok(())
     }
 
+    /// Draws the help menu
     fn draw_help(&self) -> Result<()> {
         execute!(stdout(), RestorePosition, Clear(ClearType::FromCursorDown))?;
 
@@ -170,6 +194,7 @@ impl TasksApp {
         Ok(())
     }
 
+    // Moves the current_list_index to the next list
     fn move_to_next_list(&mut self) {
         if self.current_list_index + 1 < self.lists.len() {
             self.current_list_index += 1;
@@ -177,6 +202,7 @@ impl TasksApp {
         }
     }
 
+    // Moves the current_list_index to the previous list
     fn move_to_prev_list(&mut self) {
         self.current_list_index = self.current_list_index.saturating_sub(1);
         if self.current_task_index >= self.lists[self.current_list_index].length() {
@@ -184,16 +210,19 @@ impl TasksApp {
         }
     }
 
+    /// Moves the task cursor down
     fn move_to_next_task(&mut self) {
         if self.current_task_index + 1 < self.lists[self.current_list_index].length() {
             self.current_task_index += 1;
         }
     }
 
+    /// Moves the task cursor up
     fn move_to_prev_task(&mut self) {
         self.current_task_index = self.current_task_index.saturating_sub(1);
     }
 
+    /// Gets the current task that the current_task_index is pointing to
     fn get_current_task(&self) -> Option<Task> {
         self.lists[self.current_list_index]
             .tasks_iter()
@@ -201,6 +230,7 @@ impl TasksApp {
             .nth(self.current_task_index)
     }
 
+    /// Moves the current task to the next list, if there is one
     fn move_current_task_to_next_list(&mut self) {
         if self.current_list_index + 1 >= self.lists.len() {
             return;
@@ -221,6 +251,7 @@ impl TasksApp {
         }
     }
 
+    /// Moves the current task to the list previous to the current one, if there is one
     fn move_current_task_to_prev_list(&mut self) {
         if self.current_list_index == 0 {
             return;
@@ -241,6 +272,7 @@ impl TasksApp {
         }
     }
 
+    /// Creates a new list
     fn create_new_list(&mut self) -> Result<()> {
         execute!(
             stdout(),
@@ -283,6 +315,7 @@ impl TasksApp {
         Ok(())
     }
 
+    /// Renames the current list
     fn rename_current_list(&mut self) -> Result<()> {
         execute!(
             stdout(),
@@ -323,6 +356,7 @@ impl TasksApp {
         Ok(())
     }
 
+    /// Deletes the current list
     fn delete_current_list(&mut self) -> Result<()> {
         self.goto_empty_line()?;
         let message = format!(
@@ -346,6 +380,7 @@ impl TasksApp {
         Ok(())
     }
 
+    /// Creates a new task and attempts to add it to the list
     fn create_new_task(&mut self) -> Result<()> {
         self.goto_empty_line()?;
         execute!(stdout(), cursor::Show, cursor::SetCursorStyle::SteadyBlock,)?;
@@ -377,6 +412,7 @@ impl TasksApp {
         Ok(())
     }
 
+    /// Rewords the current task
     fn reword_current_task(&mut self) -> Result<()> {
         if self.current_task_index >= self.lists[self.current_list_index].length() {
             return Ok(());
@@ -423,10 +459,12 @@ impl TasksApp {
         Ok(())
     }
 
+    /// Sorts the current list
     fn sort_current_list(&mut self) {
         self.lists[self.current_list_index].sort_list();
     }
 
+    /// Sorts all the lists in the app
     fn sort_all_lists(&mut self) {
         self.lists = self
             .lists
@@ -456,22 +494,26 @@ impl TasksApp {
         }
     }
 
+    /// Deletes the current task
     fn delete_current_task(&mut self) {
         self.last_deleted_task = self.get_current_task();
         self.lists[self.current_list_index].delete_task(self.current_task_index);
         self.current_task_index = self.current_task_index.saturating_sub(1);
     }
 
+    /// Removes all completed tasks from the current list
     fn delete_completed_tasks(&mut self) {
         self.lists[self.current_list_index].delete_completed_tasks();
         self.current_task_index = 0;
     }
 
+    /// Removes all tasks from the current list
     fn delete_all_tasks(&mut self) {
         self.lists[self.current_list_index].delete_all_tasks();
         self.current_task_index = 0;
     }
 
+    /// Deletes all completed tasks on every list in the app
     fn delete_completed_tasks_on_all_lists(&mut self) {
         for list in &mut self.lists {
             list.delete_completed_tasks();
@@ -479,6 +521,7 @@ impl TasksApp {
         self.current_task_index = 0;
     }
 
+    /// Moves the cursor to the next empty line
     fn goto_empty_line(&mut self) -> Result<()> {
         execute!(
             stdout(),

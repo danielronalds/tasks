@@ -1,12 +1,18 @@
 use colored::Colorize;
 
 #[derive(Clone, Debug)]
+/// A struct to group related tasks under a name
 pub struct List {
     tasks: Vec<Task>,
     name: String,
 }
 
 impl List {
+    /// Creates a new List
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name the list should have
     pub fn new<T: ToString>(name: T) -> Self {
         Self {
             tasks: vec![],
@@ -14,14 +20,21 @@ impl List {
         }
     }
 
+    /// Returns an owned copy of the list name
     pub fn name(&self) -> String {
         self.name.clone()
     }
 
+    /// Returns an iterator of the tasks contained in the list
     pub fn tasks_iter(&self) -> std::slice::Iter<Task> {
         self.tasks.iter()
     }
 
+    /// Toggles the status of the task at the given index. No error is generated if the task index
+    /// is out of bounds, the method just returns early.
+    ///
+    /// # Arguments
+    /// * `index` - The index of the task to toggle
     pub fn toggle_task(&mut self, index: usize) {
         if index >= self.length() {
             return;
@@ -30,14 +43,24 @@ impl List {
         self.tasks[index].toggle_status();
     }
 
+    /// Returns the number of tasks in the list
     pub fn length(&self) -> usize {
         self.tasks.len()
     }
 
+    /// Renames the name of the list
+    ///
+    /// # Arguments
+    /// * `new_name` - The new name of the list
     pub fn rename_list<T: ToString>(&mut self, new_name: T) {
         self.name = new_name.to_string();
     }
 
+    /// Creates and adds a new task to the list. The task will not be completed by default, and the
+    /// method returns early if the description is empty
+    ///
+    /// # Arguments
+    /// * `description` - The description of the task to add
     pub fn add_task<T: ToString>(&mut self, description: T) {
         if description.to_string().is_empty() {
             return;
@@ -46,6 +69,13 @@ impl List {
         self.tasks.push(Task::new(description));
     }
 
+    /// Inserts the given `Task` at the given index. If the index given is 1 greater than the
+    /// current length of the task vec, then it is inserted at 0. Otherwise the method returns
+    /// early to avoid a panic.
+    ///
+    /// # Arguments
+    /// * `index` - The index to insert the task at
+    /// * `task`  - The task to insert
     pub fn insert_task(&mut self, index: usize, task: Task) {
         if index > self.tasks.len() {
             if index - self.tasks.len() == 1 {
@@ -56,6 +86,11 @@ impl List {
         self.tasks.insert(index, task);
     }
 
+    /// Changes the description of the task at the given index
+    ///
+    /// # Arguments
+    /// * `index`        - The index of the task to change the description of
+    /// * `description`  - The new description of the task
     pub fn reword_task<T: ToString>(&mut self, index: usize, description: T) {
         if index >= self.length() {
             return;
@@ -64,6 +99,11 @@ impl List {
         self.tasks[index].description = description.to_string();
     }
 
+    /// Deletes the task at the given index from the list. If the index is out of bounds then the
+    /// method returns early to avoid a panic.
+    ///
+    /// # Arguments
+    /// * `index` - The index of the task to delete
     pub fn delete_task(&mut self, index: usize) {
         if index >= self.length() {
             return;
@@ -72,6 +112,7 @@ impl List {
         self.tasks.remove(index);
     }
 
+    /// Removes completed tasks from the list
     pub fn delete_completed_tasks(&mut self) {
         self.tasks = self
             .tasks
@@ -81,10 +122,12 @@ impl List {
             .collect();
     }
 
+    /// Removes all tasks from the list
     pub fn delete_all_tasks(&mut self) {
         self.tasks = vec![];
     }
 
+    /// Sorts the list with completed tasks being first, followed by the rest of the tasks
     pub fn sort_list(&mut self) {
         self.tasks = self
             .tasks
@@ -97,12 +140,17 @@ impl List {
 }
 
 #[derive(Clone, Debug)]
+/// Struct to represent a task
 pub struct Task {
     description: String,
     completed: bool,
 }
 
 impl Task {
+    /// Creates a new task
+    ///
+    /// # Arguments
+    /// * `description` - The description the task should have
     pub fn new<T: ToString>(description: T) -> Task {
         Self {
             description: description.to_string(),
@@ -110,14 +158,17 @@ impl Task {
         }
     }
 
+    /// Toggles whether the task is completed or not
     pub fn toggle_status(&mut self) {
         self.completed = !self.completed;
     }
 
+    /// Returns the tasks status
     pub fn status(&self) -> bool {
         self.completed
     }
 
+    /// Returns the tasks description
     pub fn description(&self) -> String {
         self.description.clone()
     }

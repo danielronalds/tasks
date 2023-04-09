@@ -5,8 +5,14 @@ use std::io::{
     Result,
 };
 
+/// The filename that the app should serialise and deserialise from
 const FILE_NAME: &str = ".tasks.md";
 
+/// Writes the given vector of list structs to the .tasks.md file
+///
+/// # Arguments
+///
+/// * `lists` - The vector of list's to serialise
 pub fn serialise(lists: Vec<List>) -> Result<()> {
     let mut file = File::create(FILE_NAME)?;
 
@@ -30,6 +36,16 @@ pub fn serialise(lists: Vec<List>) -> Result<()> {
     Ok(())
 }
 
+/// Reads the .tasks.md file and returns a vector of list's
+///
+/// The following guidelines are followed when reading the file
+/// - Empty lines are skipped
+/// - Lines beginning with '- [x] ' or '- [ ] ' are added as task to the current lists
+/// - Every line that is not empty and does not meet the previous criteria is treated as a new list
+///
+/// # Returns
+///
+/// The deserialised data as a vector of `List` structs
 pub fn deserialise() -> Result<Vec<List>> {
     let mut lists: Vec<List> = vec![];
 
@@ -60,6 +76,15 @@ pub fn deserialise() -> Result<Vec<List>> {
     Ok(lists)
 }
 
+/// Generates a fresh start for the program
+///
+/// # Arguments
+///
+/// * `list_name` - The name the list should have
+///
+/// # Returns
+///
+/// A vector of `List` structs with one element, a `List` with the given name
 pub fn new_tasks_data<T: ToString>(list_name: T) -> Vec<List> {
     let mut name = list_name.to_string();
 

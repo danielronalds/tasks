@@ -281,86 +281,38 @@ impl TasksApp {
 
     /// Creates a new list
     fn create_new_list(&mut self) -> Result<()> {
-        execute!(
-            stdout(),
-            RestorePosition,
-            Clear(ClearType::FromCursorDown),
-            cursor::Show,
-            cursor::SetCursorStyle::SteadyBlock
+        execute!(stdout(), RestorePosition, Clear(ClearType::FromCursorDown))?;
+
+        let name = typing_line(
+            format!(
+                "({}/{}) ",
+                self.current_list_index + 2,
+                self.lists.len() + 1
+            ),
+            String::new(),
         )?;
 
-        let mut name = String::new();
-
-        loop {
-            let print_input = format!(
-                "\r({}/{}) {}",
-                self.current_list_index + 2,
-                self.lists.len() + 1,
-                &name,
-            );
-            execute!(
-                stdout(),
-                cursor::Show,
-                Clear(ClearType::CurrentLine),
-                Print(print_input)
-            )?;
-            if let Event::Key(key) = read()? {
-                match key.code {
-                    KeyCode::Char(char) => name.push(char),
-                    KeyCode::Backspace => {
-                        name.pop();
-                    }
-                    KeyCode::Enter => break,
-                    KeyCode::Esc => return Ok(()),
-                    _ => (),
-                }
+        if let Some(name) = name {
+            if let Ok(list) = List::new(name) {
+                self.lists.insert(self.current_list_index + 1, list);
+                self.current_list_index += 1;
             }
-        }
-        if let Ok(list) = List::new(name) {
-            self.lists.insert(self.current_list_index + 1, list);
-            self.current_list_index += 1;
         }
         Ok(())
     }
 
     /// Renames the current list
     fn rename_current_list(&mut self) -> Result<()> {
-        execute!(
-            stdout(),
-            RestorePosition,
-            Clear(ClearType::CurrentLine),
-            cursor::Show,
-            cursor::SetCursorStyle::SteadyBlock
+        execute!(stdout(), RestorePosition,)?;
+
+        let new_name = typing_line(
+            format!("({}/{}) ", self.current_list_index + 1, self.lists.len()),
+            self.lists[self.current_list_index].name(),
         )?;
 
-        let mut new_name = self.lists[self.current_list_index].name();
-
-        loop {
-            let print_input = format!(
-                "\r({}/{}) {}",
-                self.current_list_index + 1,
-                self.lists.len(),
-                &new_name,
-            );
-            execute!(
-                stdout(),
-                cursor::Show,
-                Clear(ClearType::CurrentLine),
-                Print(print_input)
-            )?;
-            if let Event::Key(key) = read()? {
-                match key.code {
-                    KeyCode::Char(char) => new_name.push(char),
-                    KeyCode::Backspace => {
-                        new_name.pop();
-                    }
-                    KeyCode::Enter => break,
-                    KeyCode::Esc => return Ok(()),
-                    _ => (),
-                }
-            }
+        if let Some(new_name) = new_name {
+            self.lists[self.current_list_index].rename_list(new_name);
         }
-        self.lists[self.current_list_index].rename_list(new_name);
         Ok(())
     }
 
@@ -391,32 +343,13 @@ impl TasksApp {
     /// Creates a new task and attempts to add it to the list
     fn create_new_task(&mut self) -> Result<()> {
         self.goto_empty_line()?;
-        execute!(stdout(), cursor::Show, cursor::SetCursorStyle::SteadyBlock,)?;
+        execute!(stdout(), Clear(ClearType::FromCursorDown))?;
 
-        let mut description = String::new();
+        let description = typing_line("[ ] ", String::new())?;
 
-        loop {
-            execute!(
-                stdout(),
-                RestorePosition,
-                cursor::MoveDown((self.lists[self.current_list_index].length() + 1) as u16),
-                Clear(ClearType::FromCursorDown),
-                Print(format!("\r{} {}", "[ ]", &description))
-            )?;
-            if let Event::Key(key) = read()? {
-                match key.code {
-                    KeyCode::Char(char) => description.push(char),
-                    KeyCode::Backspace => {
-                        description.pop();
-                    }
-                    KeyCode::Esc => return Ok(()),
-                    KeyCode::Enter => break,
-                    _ => (),
-                }
-            }
+        if let Some(description) = description {
+            self.lists[self.current_list_index].add_task(description);
         }
-
-        self.lists[self.current_list_index].add_task(description);
         Ok(())
     }
 
@@ -426,44 +359,28 @@ impl TasksApp {
             return Ok(());
         }
 
-        execute!(stdout(), cursor::Show, cursor::SetCursorStyle::SteadyBlock,)?;
+        execute!(
+            stdout(),
+            RestorePosition,
+            cursor::MoveDown((self.current_task_index + 1) as u16),
+        )?;
 
         let task = self.lists[self.current_list_index]
             .tasks_iter()
             .nth(self.current_task_index)
             .expect("We know this task exists so this can't fail");
 
-        let mut description = task.description();
+        let description = typing_line(
+            match task.status() {
+                true => format!("[{}] ", "✔".bright_green()),
+                false => "[ ] ".to_string(),
+            },
+            task.description(),
+        )?;
 
-        loop {
-            execute!(
-                stdout(),
-                RestorePosition,
-                cursor::MoveDown((self.current_task_index + 1) as u16),
-                Clear(ClearType::CurrentLine),
-                Print(format!(
-                    "\r{} {}",
-                    match task.status() {
-                        true => format!("[{}]", "✔".bright_green()),
-                        false => "[ ]".to_string(),
-                    },
-                    &description
-                ))
-            )?;
-            if let Event::Key(key) = read()? {
-                match key.code {
-                    KeyCode::Char(char) => description.push(char),
-                    KeyCode::Backspace => {
-                        description.pop();
-                    }
-                    KeyCode::Esc => return Ok(()),
-                    KeyCode::Enter => break,
-                    _ => (),
-                }
-            }
+        if let Some(description) = description {
+            self.lists[self.current_list_index].reword_task(self.current_task_index, description);
         }
-
-        self.lists[self.current_list_index].reword_task(self.current_task_index, description);
         Ok(())
     }
 
@@ -542,4 +459,57 @@ impl TasksApp {
         )?;
         Ok(())
     }
+}
+
+/// Clears the current line and provides a textbox for the user to type input into
+///
+/// # Arguments
+///
+/// * `prompt` - What the textbox prompt should be
+/// * `content` - The initial content of the textfield
+///
+/// # Returns
+///
+/// If no errors occured, an Option containg None if the user canceled the operation, or Some
+/// containing what the user inputed
+fn typing_line<T: ToString>(prompt: T, content: String) -> Result<Option<String>> {
+    execute!(stdout(), cursor::Show, cursor::SetCursorStyle::SteadyBlock)?;
+
+    let mut output = content;
+    let prompt = prompt.to_string();
+
+    let mut cursor = output.len();
+
+    loop {
+        execute!(
+            stdout(),
+            Clear(ClearType::CurrentLine),
+            Print(format!("\r{}{}", prompt, &output)),
+            cursor::MoveToColumn(0),
+            cursor::MoveRight((prompt.len() + cursor) as u16)
+        )?;
+        if let Event::Key(key) = read()? {
+            match key.code {
+                KeyCode::Char(char) => {
+                    output.insert(cursor, char);
+                    cursor += 1;
+                }
+                KeyCode::Backspace => {
+                    output.pop();
+                    cursor = cursor.saturating_sub(1);
+                }
+                KeyCode::Esc => return Ok(None),
+                KeyCode::Enter => break,
+                KeyCode::Left => cursor = cursor.saturating_sub(1),
+                KeyCode::Right => {
+                    if cursor != output.len() {
+                        cursor += 1;
+                    }
+                }
+                _ => (),
+            }
+        }
+    }
+
+    Ok(Some(output))
 }

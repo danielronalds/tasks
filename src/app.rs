@@ -34,7 +34,7 @@ pub struct TasksApp {
     lists: Vec<List>,
     current_list_index: usize,
     current_task_index: usize,
-    last_deleted_task: Option<Task>,
+    clipboard: Option<Task>,
 }
 
 impl TasksApp {
@@ -48,7 +48,7 @@ impl TasksApp {
             lists,
             current_list_index: 0,
             current_task_index: 0,
-            last_deleted_task: None,
+            clipboard: None,
         }
     }
 
@@ -95,8 +95,8 @@ impl TasksApp {
                     KeyCode::Char('L') => self.move_current_task_to_next_list(),
                     KeyCode::Left | KeyCode::Char('h') => self.move_to_prev_list(),
                     KeyCode::Char('H') => self.move_current_task_to_prev_list(),
-                    KeyCode::Char('p') => self.paste_last_deleted_task(1),
-                    KeyCode::Char('P') => self.paste_last_deleted_task(0),
+                    KeyCode::Char('p') => self.paste_clipboard(1),
+                    KeyCode::Char('P') => self.paste_clipboard(0),
                     KeyCode::Char('D') => self.delete_current_list()?,
                     KeyCode::Char('d') => {
                         if let Event::Key(key) = read()? {
@@ -106,6 +106,13 @@ impl TasksApp {
                                 KeyCode::Char('c') => self.delete_completed_tasks(),
                                 KeyCode::Char('C') => self.delete_completed_tasks_on_all_lists(),
                                 _ => (),
+                            }
+                        }
+                    }
+                    KeyCode::Char('y') => {
+                        if let Event::Key(key) = read()? {
+                            if let KeyCode::Char('y') = key.code {
+                                self.yank_current_task();
                             }
                         }
                     }
@@ -477,13 +484,13 @@ impl TasksApp {
             .collect();
     }
 
-    /// Pastes the last deleted task, if it is not None, into the current list
+    /// Pastes the task in the clipboard, if it is not None, into the current list
     ///
     /// # Arguments
     ///
     /// * `offset` - The offset of where to paste the task from the current_task_index
-    fn paste_last_deleted_task(&mut self, offset: usize) {
-        if let Some(task) = &self.last_deleted_task {
+    fn paste_clipboard(&mut self, offset: usize) {
+        if let Some(task) = &self.clipboard {
             self.lists[self.current_list_index]
                 .insert_task(self.current_task_index + offset, task.clone());
             // If the task is being pasted as the first task in a list, then moving the current
@@ -491,13 +498,17 @@ impl TasksApp {
             if self.lists[self.current_list_index].length() > 1 {
                 self.current_task_index += offset;
             }
-            self.last_deleted_task = None;
         }
+    }
+
+    /// Copies the current task into the clipboard
+    fn yank_current_task(&mut self) {
+        self.clipboard = self.get_current_task();
     }
 
     /// Deletes the current task
     fn delete_current_task(&mut self) {
-        self.last_deleted_task = self.get_current_task();
+        self.yank_current_task();
         self.lists[self.current_list_index].delete_task(self.current_task_index);
         self.current_task_index = self.current_task_index.saturating_sub(1);
     }

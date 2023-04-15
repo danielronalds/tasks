@@ -10,7 +10,7 @@ fn main() {
     let lists = match deserialise() {
         Ok(lists) => lists,
         Err(_) => {
-            println!("Coudln't find a .tasks.md file in this directory, create one? (Y/n)");
+            println!("Couldn't find a .tasks.md file in this directory, create one? (Y/n)");
             crossterm::terminal::enable_raw_mode().expect("Failed to enable raw terminal mode");
             match read().expect("failed to read") {
                 Event::Key(key) => match key.code {
@@ -26,7 +26,9 @@ fn main() {
     let mut app = TasksApp::new(lists);
 
     match app.run() {
-        Ok(lists) => serialise(lists).expect("Couldn't serialize"),
+        Ok(lists) => if let Some(lists) = lists {
+            serialise(lists).expect("Couldn't serialize")
+        }
         Err(e) => eprintln!("Error: {}", e),
     };
 }

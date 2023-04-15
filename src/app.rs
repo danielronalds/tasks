@@ -29,6 +29,21 @@ fn println<T: ToString>(text: T) -> Result<()> {
     Ok(())
 }
 
+/// Waits for a key event, returning true if the user confirms the action. No by DefaultUserShape
+///
+/// # Returns
+///
+/// `true` if the key pressed is 'y' or 'Y'
+fn get_confirmation() -> Result<bool> {
+    match read()? {
+        Event::Key(key) => match key.code {
+            KeyCode::Char('y') | KeyCode::Char('Y') => Ok(true),
+            _ => Ok(false),
+        },
+        _ => Ok(false),
+    }
+}
+
 /// The application
 pub struct TasksApp {
     lists: Vec<List>,
@@ -57,7 +72,7 @@ impl TasksApp {
     /// # Returns
     ///
     /// The finished state of the lists after the program has run
-    pub fn run(&mut self) -> Result<Vec<List>> {
+    pub fn run(&mut self) -> Result<Option<Vec<List>>> {
         // Saving the start position of the app
         execute!(
             stdout(),
@@ -65,6 +80,8 @@ impl TasksApp {
             cursor::SetCursorStyle::SteadyUnderScore
         )?;
         enable_raw_mode()?;
+
+        let mut save_changes = true;
 
         loop {
             execute!(
@@ -129,6 +146,23 @@ impl TasksApp {
                         self.lists[self.current_list_index].toggle_task(self.current_task_index)
                     }
                     KeyCode::Char('q') => break,
+                    KeyCode::Char('Q') => {
+                        self.goto_empty_line()?;
+                        execute!(
+                            stdout(),
+                            Print(format!(
+                                "[{}] This will exit without saving, are you sure? y/N ",
+                                "!".bright_red()
+                            ))
+                        )?;
+
+                        if !get_confirmation()? {
+                            continue;
+                        }
+
+                        save_changes = false;
+                        break;
+                    }
                     KeyCode::Char('1') => self.move_to_list(0),
                     KeyCode::Char('2') => self.move_to_list(1),
                     KeyCode::Char('3') => self.move_to_list(2),
@@ -142,6 +176,7 @@ impl TasksApp {
                 }
             }
         }
+
         disable_raw_mode()?;
         execute!(
             stdout(),
@@ -150,7 +185,10 @@ impl TasksApp {
             Clear(ClearType::FromCursorDown)
         )?;
 
-        Ok(self.lists.clone())
+        match save_changes {
+            true => Ok(Some(self.lists.clone())),
+            false => Ok(None),
+        }
     }
 
     /// Draws the given list of the app
@@ -350,11 +388,8 @@ impl TasksApp {
         );
         execute!(stdout(), Print(message))?;
 
-        if let Event::Key(key) = read()? {
-            match key.code {
-                KeyCode::Char('y') | KeyCode::Char('Y') => (),
-                _ => return Ok(()),
-            }
+        if !get_confirmation()? {
+            return Ok(());
         }
 
         if self.lists.len() > 1 {

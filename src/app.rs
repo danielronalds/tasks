@@ -129,6 +129,15 @@ impl TasksApp {
                         self.lists[self.current_list_index].toggle_task(self.current_task_index)
                     }
                     KeyCode::Char('q') => break,
+                    KeyCode::Char('1') => self.move_to_list(0),
+                    KeyCode::Char('2') => self.move_to_list(1),
+                    KeyCode::Char('3') => self.move_to_list(2),
+                    KeyCode::Char('4') => self.move_to_list(3),
+                    KeyCode::Char('5') => self.move_to_list(4),
+                    KeyCode::Char('6') => self.move_to_list(5),
+                    KeyCode::Char('7') => self.move_to_list(6),
+                    KeyCode::Char('8') => self.move_to_list(7),
+                    KeyCode::Char('9') => self.move_to_list(8),
                     _ => (),
                 }
             }
@@ -191,6 +200,7 @@ impl TasksApp {
             "P        Paste tasks in the clipboard above",
             "s        Sorts the current list",
             "S        Sorts all lists",
+            "1-9      Move to the list corresponding to the number pressed",
             "?        Show this menu",
             "q        Quit",
         ];
@@ -218,6 +228,17 @@ impl TasksApp {
         self.current_list_index = self.current_list_index.saturating_sub(1);
         if self.current_task_index >= self.lists[self.current_list_index].length() {
             self.current_task_index = 0;
+        }
+    }
+
+    /// Moves to the given list if it exists
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The index of the list to move to
+    fn move_to_list(&mut self, index: usize) {
+        if index < self.lists.len() {
+            self.current_list_index = index;
         }
     }
 

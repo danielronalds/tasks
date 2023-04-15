@@ -34,7 +34,7 @@ pub struct TasksApp {
     lists: Vec<List>,
     current_list_index: usize,
     current_task_index: usize,
-    clipboard: Option<Task>,
+    clipboard: Vec<Task>,
 }
 
 impl TasksApp {
@@ -48,7 +48,7 @@ impl TasksApp {
             lists,
             current_list_index: 0,
             current_task_index: 0,
-            clipboard: None,
+            clipboard: vec![],
         }
     }
 
@@ -111,8 +111,10 @@ impl TasksApp {
                     }
                     KeyCode::Char('y') => {
                         if let Event::Key(key) = read()? {
-                            if let KeyCode::Char('y') = key.code {
-                                self.yank_current_task();
+                            match key.code {
+                                KeyCode::Char('y') => self.yank_current_task(),
+                                KeyCode::Char('A') => self.yank_current_list(),
+                                _ => (),
                             }
                         }
                     }
@@ -183,9 +185,10 @@ impl TasksApp {
             "dc       Delete completed tasks from the current list",
             "dC       Delete completed tasks from the all lists",
             "D        Delete current list",
-            "y        Yank current task",
-            "p        Paste last deleted task below",
-            "P        Paste last deleted task above",
+            "yy       Yank current task",
+            "yA       Yank all tasks in the current list",
+            "p        Paste tasks in the clipboard below",
+            "P        Paste tasks in the clipboard above",
             "s        Sorts the current list",
             "S        Sorts all lists",
             "?        Show this menu",
@@ -408,7 +411,7 @@ impl TasksApp {
     ///
     /// * `offset` - The offset of where to paste the task from the current_task_index
     fn paste_clipboard(&mut self, offset: usize) {
-        if let Some(task) = &self.clipboard {
+        for task in &self.clipboard {
             self.lists[self.current_list_index]
                 .insert_task(self.current_task_index + offset, task.clone());
             // If the task is being pasted as the first task in a list, then moving the current
@@ -421,7 +424,19 @@ impl TasksApp {
 
     /// Copies the current task into the clipboard
     fn yank_current_task(&mut self) {
-        self.clipboard = self.get_current_task();
+        if let Some(current_task) = self.get_current_task() {
+            // Clearing the list, as yanking only gets the current task
+            self.clipboard = vec![];
+            self.clipboard.push(current_task);
+        }
+    }
+
+    /// Copies all the tasks in the current list into the clipboard
+    fn yank_current_list(&mut self) {
+        self.clipboard = self.lists[self.current_list_index]
+            .tasks_iter()
+            .map(|x| x.to_owned())
+            .collect();
     }
 
     /// Deletes the current task
@@ -439,6 +454,7 @@ impl TasksApp {
 
     /// Removes all tasks from the current list
     fn delete_all_tasks(&mut self) {
+        self.yank_current_list();
         self.lists[self.current_list_index].delete_all_tasks();
         self.current_task_index = 0;
     }

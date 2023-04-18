@@ -239,9 +239,11 @@ impl TasksApp {
             "P        Paste tasks in the clipboard above",
             "s        Sorts the current list",
             "S        Sorts all lists",
+            "G        Goto to the last task in the last",
             "1-9      Move to the list corresponding to the number pressed",
             "?        Show this menu",
             "q        Quit",
+            "Q        Quit without saving",
         ];
 
         for keybind in keybinds {

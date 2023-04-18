@@ -141,6 +141,7 @@ impl TasksApp {
                     KeyCode::Char('R') => self.rename_current_list()?,
                     KeyCode::Char('s') => self.sort_current_list(),
                     KeyCode::Char('S') => self.sort_all_lists(),
+                    KeyCode::Char('G') => self.goto_bottom(),
                     KeyCode::Char('?') => self.draw_help()?,
                     KeyCode::Char(' ') => {
                         self.lists[self.current_list_index].toggle_task(self.current_task_index)
@@ -531,6 +532,10 @@ impl TasksApp {
             cursor::MoveDown((self.lists[self.current_list_index].length() + 1) as u16),
         )?;
         Ok(())
+    }
+
+    fn goto_bottom(&mut self) {
+        self.current_task_index = self.lists[self.current_list_index].length() - 1;
     }
 }
 

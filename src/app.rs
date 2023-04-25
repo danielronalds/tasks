@@ -29,7 +29,7 @@ fn println<T: ToString>(text: T) -> Result<()> {
     Ok(())
 }
 
-/// Waits for a key event, returning true if the user confirms the action. No by DefaultUserShape
+/// Waits for a key event, returning true if the user confirms the action. No by Default
 ///
 /// # Returns
 ///
@@ -232,19 +232,19 @@ impl TasksApp {
             "dd       Delete current task",
             "dA       Delete all tasks from the current list",
             "dc       Delete completed tasks from the current list",
-            "dC       Delete completed tasks from the all lists",
+            "dC       Delete completed tasks from all lists",
             "D        Delete current list",
             "yy       Yank current task",
             "yA       Yank all tasks in the current list",
-            "p        Paste tasks in the clipboard below",
-            "P        Paste tasks in the clipboard above",
+            "p        Paste task/s in the clipboard below",
+            "P        Paste task/s in the clipboard above",
             "s        Sorts the current list",
             "S        Sorts all lists",
-            "G        Goto to the last task in the last",
+            "G        Goto to the last task in the list",
             "1-9      Move to the list corresponding to the number pressed",
             "?        Show this menu",
             "q        Quit",
-            "Q        Quit without saving",
+            "Q        Quit without saving changes",
         ];
 
         for keybind in keybinds {
@@ -479,7 +479,7 @@ impl TasksApp {
             self.lists[self.current_list_index]
                 .insert_task(self.current_task_index + offset, task.clone());
             // If the task is being pasted as the first task in a list, then moving the current
-            // task index results in a ui glitch
+            // task index results in a UI glitch
             if self.lists[self.current_list_index].length() > 1 {
                 self.current_task_index += offset;
             }
@@ -556,8 +556,8 @@ impl TasksApp {
 ///
 /// # Returns
 ///
-/// If no errors occured, an Option containg None if the user canceled the operation, or Some
-/// containing what the user inputed
+/// If no errors occured, an Option containing None if the user canceled the operation, or Some
+/// containing what the user inputted
 fn typing_line<T: ToString>(prompt: T, prompt_len: u16, content: String) -> Result<Option<String>> {
     execute!(stdout(), cursor::Show, cursor::SetCursorStyle::SteadyBlock)?;
 

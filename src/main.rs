@@ -26,9 +26,12 @@ fn main() {
     let mut app = TasksApp::new(lists);
 
     match app.run() {
-        Ok(lists) => if let Some(lists) = lists {
-            serialise(lists).expect("Couldn't serialize")
+        Ok(lists) => {
+            if let Some(lists) = lists {
+                serialise(lists).expect("Couldn't serialize")
+            }
         }
+
         Err(e) => eprintln!("Error: {}", e),
     };
 }

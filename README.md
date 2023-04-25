@@ -27,12 +27,16 @@ cargo install --git https://github.com/danielronalds/tasks.git
 | dc | Delete completed tasks from the current list |
 | dC | Delete completed tasks from the all lists |
 | D | Delete current list |
-| y | Yank current task |
-| p | Paste last deleted task below |
-| P | Paste last deleted task above |
+| yy | Yank current task |
+| yA | Yank all tasks in the current list |
+| p | Paste task/s in the clipboard below |
+| P | Paste task/s in the clipboard above |
 | s | Sorts the current list |
 | S | Sorts all lists |
+| G | Goto to the last task in the list |
+| 1-9 | Move to the list corresponding to the number pressed |
 | ? | Show help menu |
 | q | Quit |
+| q | Quit without saving changes |
 
 **Note** Arrow keys can also be used

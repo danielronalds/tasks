@@ -182,6 +182,7 @@ impl TasksApp {
         execute!(
             stdout(),
             cursor::SetCursorStyle::DefaultUserShape,
+            cursor::Show,
             RestorePosition,
             Clear(ClearType::FromCursorDown)
         )?;
@@ -575,8 +576,10 @@ fn typing_line<T: ToString>(prompt: T, content: String) -> Result<Option<String>
                     cursor += 1;
                 }
                 KeyCode::Backspace => {
-                    output.remove(cursor - 1);
-                    cursor = cursor.saturating_sub(1);
+                    if output.len() > 0 {
+                        output.remove(cursor - 1);
+                        cursor = cursor.saturating_sub(1);
+                    }
                 }
                 KeyCode::Esc => return Ok(None),
                 KeyCode::Enter => break,

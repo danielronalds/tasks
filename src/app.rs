@@ -349,15 +349,15 @@ impl TasksApp {
     /// Creates a new list
     fn create_new_list(&mut self) -> Result<()> {
         execute!(stdout(), RestorePosition, Clear(ClearType::FromCursorDown))?;
+        let prompt = format!(
+            "({}/{}) ",
+            self.current_list_index + 2,
+            self.lists.len() + 1
+        );
 
-        let name = typing_line(
-            format!(
-                "({}/{}) ",
-                self.current_list_index + 2,
-                self.lists.len() + 1
-            ),
-            String::new(),
-        )?;
+        let prompt_length = prompt.len() as u16;
+
+        let name = typing_line(prompt, prompt_length, String::new())?;
 
         if let Some(name) = name {
             if let Ok(list) = List::new(name) {
@@ -372,8 +372,11 @@ impl TasksApp {
     fn rename_current_list(&mut self) -> Result<()> {
         execute!(stdout(), RestorePosition,)?;
 
+        let prompt = format!("({}/{}) ", self.current_list_index + 1, self.lists.len());
+        let prompt_length = prompt.len() as u16;
         let new_name = typing_line(
-            format!("({}/{}) ", self.current_list_index + 1, self.lists.len()),
+            prompt,
+            prompt_length,
             self.lists[self.current_list_index].name(),
         )?;
 
@@ -409,7 +412,7 @@ impl TasksApp {
         self.goto_empty_line()?;
         execute!(stdout(), Clear(ClearType::FromCursorDown))?;
 
-        let description = typing_line("[ ] ", String::new())?;
+        let description = typing_line("[ ] ", 4, String::new())?;
 
         if let Some(description) = description {
             self.lists[self.current_list_index].add_task(description);
@@ -439,6 +442,7 @@ impl TasksApp {
                 true => format!("[{}] ", "✔".bright_green()),
                 false => "[ ] ".to_string(),
             },
+            4,
             task.description(),
         )?;
 
@@ -547,13 +551,14 @@ impl TasksApp {
 /// # Arguments
 ///
 /// * `prompt` - What the textbox prompt should be
+/// * `prompt_len` - The length of the prompt
 /// * `content` - The initial content of the textfield
 ///
 /// # Returns
 ///
 /// If no errors occured, an Option containg None if the user canceled the operation, or Some
 /// containing what the user inputed
-fn typing_line<T: ToString>(prompt: T, content: String) -> Result<Option<String>> {
+fn typing_line<T: ToString>(prompt: T, prompt_len: u16, content: String) -> Result<Option<String>> {
     execute!(stdout(), cursor::Show, cursor::SetCursorStyle::SteadyBlock)?;
 
     let mut output = content;
@@ -567,7 +572,7 @@ fn typing_line<T: ToString>(prompt: T, content: String) -> Result<Option<String>
             Clear(ClearType::CurrentLine),
             Print(format!("\r{}{}", prompt, &output)),
             cursor::MoveToColumn(0),
-            cursor::MoveRight((prompt.len() + cursor) as u16)
+            cursor::MoveRight(prompt_len + (cursor as u16))
         )?;
         if let Event::Key(key) = read()? {
             match key.code {
@@ -576,7 +581,7 @@ fn typing_line<T: ToString>(prompt: T, content: String) -> Result<Option<String>
                     cursor += 1;
                 }
                 KeyCode::Backspace => {
-                    if output.len() > 0 {
+                    if !output.is_empty() {
                         output.remove(cursor - 1);
                         cursor = cursor.saturating_sub(1);
                     }

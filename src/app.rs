@@ -310,19 +310,15 @@ impl TasksApp {
             return;
         }
 
-        let (description, status) = match self.get_current_task() {
-            Some(task) => (task.description(), task.status()),
+        let task = match self.get_current_task() {
+            Some(task) => task,
             None => return,
         };
 
         self.lists[self.current_list_index].delete_task(self.current_task_index);
         self.move_to_next_list();
-        self.lists[self.current_list_index].add_task(description);
-        self.current_task_index = self.lists[self.current_list_index].length() - 1;
-
-        if status {
-            self.lists[self.current_list_index].toggle_task(self.current_task_index);
-        }
+        self.current_task_index = self.lists[self.current_list_index].length();
+        self.lists[self.current_list_index].insert_task(self.current_task_index, task);
     }
 
     /// Moves the current task to the list previous to the current one, if there is one
@@ -331,19 +327,15 @@ impl TasksApp {
             return;
         }
 
-        let (description, status) = match self.get_current_task() {
-            Some(task) => (task.description(), task.status()),
+        let task = match self.get_current_task() {
+            Some(task) => task,
             None => return,
         };
 
         self.lists[self.current_list_index].delete_task(self.current_task_index);
         self.move_to_prev_list();
-        self.lists[self.current_list_index].add_task(description);
-        self.current_task_index = self.lists[self.current_list_index].length() - 1;
-
-        if status {
-            self.lists[self.current_list_index].toggle_task(self.current_task_index);
-        }
+        self.current_task_index = self.lists[self.current_list_index].length();
+        self.lists[self.current_list_index].insert_task(self.current_task_index, task);
     }
 
     /// Creates a new list
